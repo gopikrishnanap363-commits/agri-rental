@@ -1,0 +1,2104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgriRental - Agricultural Equipment Rental Management Portal</title>
+    <meta name="description" content="India's leading agricultural equipment rental portal connecting farmers with verified equipment owners.">
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- External CSS -->
+    <link rel="stylesheet" href="assets/css/style.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <style>
+        .view-section { display: none; }
+        .view-section.active { display: block; }
+        .cursor-pointer { cursor: pointer; }
+
+        /* Custom AgriRental CSS for Visual Fixes */
+        :root {
+            --agri-primary: #1b5e20;
+            --agri-secondary: #2e7d32;
+            --agri-accent: #f59e0b;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            width: 100%;
+        }
+
+        /* Navbar */
+        .navbar-agri { background-color: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .brand-icon { display: flex; align-items: center; justify-content: center; background: var(--agri-primary); color: white; width: 40px; height: 40px; border-radius: 8px; margin-right: 12px; }
+        .navbar-brand-agri { display: flex; align-items: center; text-decoration: none; }
+        .btn-agri-primary { background-color: var(--agri-primary); color: white; border: none; white-space: nowrap; }
+        .btn-agri-primary:hover { background-color: var(--agri-secondary); color: white; }
+        .btn-agri-accent { background-color: var(--agri-accent); color: #000; border: none; font-weight: 600; white-space: nowrap; }
+        .btn-agri-outline { border: 2px solid var(--agri-primary); color: var(--agri-primary); background: transparent; font-weight: 600; border-radius: 50px; padding: 8px 24px; white-space: nowrap; }
+
+        /* Hero Section */
+        .hero-section {
+            background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%);
+            padding: 80px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.1); padding: 8px 16px; border-radius: 50px; font-weight: 600; font-size: 0.9rem; color: #fff; }
+
+        /* Hero typography and specific overrides */
+        .hero-heading {
+            font-size: clamp(42px, 5vw, 68px);
+            line-height: 1.05;
+        }
+
+        /* 3. Featured Card Alignment */
+        #featured-equipment-grid, #marketplace-grid {
+            display: grid !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 24px;
+            margin: 0;
+        }
+        @media (max-width: 1199px) {
+            #featured-equipment-grid, #marketplace-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (max-width: 767px) {
+            #featured-equipment-grid, #marketplace-grid { grid-template-columns: 1fr; }
+        }
+
+        /* Make sure Bootstrap column classes don't mess up grid */
+        #featured-equipment-grid > div, #marketplace-grid > div {
+            width: 100% !important;
+            max-width: none !important;
+            padding: 0 !important;
+        }
+
+        /* Equipment Card Container */
+        .equipment-card {
+            background: #fff;
+            border: 1px solid #eee;
+            border-radius: 12px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transition: transform 0.2s, box-shadow 0.2s;
+            overflow: hidden;
+        }
+        .equipment-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        /* 4. Image Container Fix */
+        .equipment-img-wrapper {
+            width: 100%;
+            height: 220px;
+            overflow: hidden;
+            position: relative;
+            border-radius: 12px 12px 0 0;
+            background: #f8f9fa;
+        }
+        .equipment-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* Badges on image */
+        .badge-equipment-category {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .badge-availability {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+        }
+
+        /* Card Body */
+        .equipment-body {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .equipment-price-tag { font-size: 1.25rem; font-weight: 800; color: var(--agri-primary); }
+        .equipment-price-period { font-size: 0.85rem; color: #6c757d; }
+
+        /* Categories */
+        #categories-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 16px;
+        }
+        @media (max-width: 991px) {
+            #categories-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        }
+        @media (max-width: 767px) {
+            #categories-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        #categories-grid > div { width: 100% !important; padding: 0 !important; }
+
+        .category-pill {
+            background: #fff;
+            border: 1px solid #eee;
+            border-radius: 12px;
+            padding: 20px 10px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .category-pill:hover {
+            border-color: var(--agri-primary);
+            box-shadow: 0 4px 15px rgba(27,94,32,0.1);
+        }
+        .category-pill-icon {
+            width: 60px;
+            height: 60px;
+            background: #f8f9fa;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--agri-primary);
+            margin: 0 auto 12px auto;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navigation Header -->
+<nav class="navbar navbar-expand-lg navbar-agri sticky-top">
+    <div class="container">
+        <a class="navbar-brand-agri cursor-pointer" onclick="switchView('view-landing')">
+            <div class="brand-icon">
+                <i class="fa-solid fa-tractor"></i>
+            </div>
+            <div>
+                <span class="d-block fw-bold text-success lh-1 fs-5">AgriRental</span>
+                <span class="d-none d-sm-block text-muted" style="font-size: 0.68rem; letter-spacing: 0.05em; text-transform: uppercase;">Equipment Portal</span>
+            </div>
+        </a>
+
+        <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
+                <li class="nav-item">
+                    <a class="nav-link fw-semibold px-3 cursor-pointer" onclick="switchView('view-landing')">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link fw-semibold px-3 cursor-pointer" onclick="switchView('view-equipment')">Browse Equipment</a>
+                </li>
+                <li class="nav-item" id="nav-farmer-dash" style="display: none;">
+                    <a class="nav-link fw-semibold px-3 cursor-pointer" onclick="switchView('view-farmer-dash')">Farmer Dashboard</a>
+                </li>
+                <li class="nav-item" id="nav-farmer-bookings" style="display: none;">
+                    <a class="nav-link fw-semibold px-3 cursor-pointer" onclick="switchView('view-farmer-bookings')">My Bookings</a>
+                </li>
+                <li class="nav-item" id="nav-owner-dash" style="display: none;">
+                    <a class="nav-link fw-semibold px-3 cursor-pointer" onclick="switchView('view-owner-dash')">Owner Dashboard</a>
+                </li>
+                <li class="nav-item" id="nav-admin-dash" style="display: none;">
+                    <a class="nav-link fw-semibold px-3 cursor-pointer" onclick="switchView('view-admin-dash')">Admin Panel</a>
+                </li>
+            </ul>
+
+            <div class="d-flex align-items-center gap-2">
+                <!-- Logged Out State -->
+                <div id="auth-logged-out">
+                    <button class="btn btn-agri-primary px-4 py-2" onclick="switchView('view-login')">
+                        <i class="fa-solid fa-mobile-screen-button me-2"></i>Login / Register
+                    </button>
+                </div>
+
+                <!-- Logged In State -->
+                <div id="auth-logged-in" class="d-flex align-items-center gap-2" style="display: none !important;">
+                    <span id="user-role-badge" class="badge rounded-pill bg-success-subtle text-success px-3 py-2 text-uppercase fw-bold" style="font-size: 0.75rem;">FARMER</span>
+                    <div class="dropdown">
+                        <button class="btn btn-light rounded-pill border px-3 py-2 dropdown-toggle d-flex align-items-center gap-2" data-bs-toggle="dropdown">
+                            <i class="fa-solid fa-circle-user fs-5 text-success"></i>
+                            <span id="user-display-name" class="fw-semibold small">Suresh Patel</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3">
+                            <li class="px-3 py-2 border-bottom">
+                                <p class="mb-0 fw-bold" id="user-menu-name">Suresh Patel</p>
+                                <small class="text-muted" id="user-menu-mobile">+91 9823456789</small>
+                            </li>
+                            <li><a class="dropdown-item py-2 cursor-pointer" onclick="switchRoleView()"><i class="fa-solid fa-gauge me-2 text-muted"></i>My Portal</a></li>
+                            <li><hr class="dropdown-divider my-1"></li>
+                            <li><a class="dropdown-item py-2 text-danger fw-semibold cursor-pointer" onclick="handleLogout()"><i class="fa-solid fa-arrow-right-from-bracket me-2"></i>Sign Out</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Notification Alert Toast -->
+<div id="global-alert-container" class="container mt-3" style="display: none;">
+    <div id="global-alert" class="alert alert-success alert-dismissible fade show border-0 shadow-sm" role="alert">
+        <span id="global-alert-msg">Notification</span>
+        <button type="button" class="btn-close" onclick="hideAlert()"></button>
+    </div>
+</div>
+
+<main>
+
+    <!-- ==========================================
+         VIEW 1: SCREEN 1 — WELCOME HERO / LANDING
+         ========================================== -->
+    <section id="view-landing" class="view-section active">
+        <!-- Hero -->
+        <div class="hero-section">
+            <div class="container position-relative z-1">
+                <div class="row align-items-center g-5">
+                    <div class="col-lg-7 text-center text-lg-start">
+                        <div class="hero-badge mb-3">
+                            <i class="fa-solid fa-seedling text-warning"></i>
+                            <span>Smart Agricultural Mechanization Portal</span>
+                        </div>
+                        <h1 class="hero-heading fw-extrabold text-white mb-3">
+                            Rent Farm Machinery with <span class="text-warning">Zero Hassle</span>
+                        </h1>
+                        <p class="lead text-white-50 mb-4">
+                            Connect directly with trusted agricultural equipment owners. Book high-performance tractors, harvesters, rotavators, and implements at transparent daily rates with instant tax invoice receipts.
+                        </p>
+
+                        <!-- Search Bar -->
+                        <div class="card p-2 border-0 shadow-lg rounded-4 mb-4" style="background: rgba(255, 255, 255, 0.95);">
+                            <div class="row g-2 align-items-center">
+                                <div class="col-md-5">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-transparent border-0 text-success"><i class="fa-solid fa-magnifying-glass"></i></span>
+                                        <input type="text" id="landing-search" class="form-control border-0 bg-transparent" placeholder="Tractor, Harvester, Rotavator...">
+                                    </div>
+                                </div>
+                                <div class="col-md-4 border-start-md">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-transparent border-0 text-success"><i class="fa-solid fa-location-dot"></i></span>
+                                        <input type="text" id="landing-loc" class="form-control border-0 bg-transparent" placeholder="City or District (e.g. Tiruchirappalli)">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <button class="btn btn-agri-primary w-100 py-2" onclick="performLandingSearch()">
+                                        <i class="fa-solid fa-arrow-right me-1"></i>Search
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex flex-wrap align-items-center gap-3 justify-content-center justify-content-lg-start">
+                            <button class="btn btn-agri-accent btn-lg px-4 py-3 rounded-pill" onclick="switchView('view-login')">
+                                <i class="fa-solid fa-mobile-screen-button me-2"></i>Get Started (Login with OTP)
+                            </button>
+                            <button class="btn btn-outline-light btn-lg px-4 py-3 rounded-pill" onclick="switchView('view-equipment')">
+                                <i class="fa-solid fa-list-check me-2"></i>Browse Equipment
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-5 text-center">
+                        <div class="hero-image-wrapper position-relative">
+                            <img src="https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=800&q=80" 
+                                 alt="Agricultural Machinery Tractor" 
+                                 class="img-fluid rounded-4 shadow-lg border border-3 border-white border-opacity-25"
+                                 style="height: 480px; object-fit: cover; width: 100%;">
+                            <div class="verification-badge position-absolute bg-white text-dark p-3 rounded-4 shadow-lg border text-start d-none d-sm-block" style="bottom: 24px; left: -24px;">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="bg-success text-white rounded-circle p-2 fs-5">
+                                        <i class="fa-solid fa-check"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0 fw-bold">100% Verified Machinery</h6>
+                                        <small class="text-muted">Instant Booking & GST Receipts</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="py-4 bg-white border-bottom">
+            <div class="container">
+                <div class="row text-center g-4">
+                    <div class="col-6 col-md-3">
+                        <h3 class="fw-bold text-success mb-1">500+</h3>
+                        <p class="text-muted small mb-0">Active Farmers</p>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <h3 class="fw-bold text-success mb-1">150+</h3>
+                        <p class="text-muted small mb-0">Machinery Fleet Units</p>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <h3 class="fw-bold text-success mb-1">₹0</h3>
+                        <p class="text-muted small mb-0">Middleman Commission</p>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <h3 class="fw-bold text-success mb-1">4.9 / 5</h3>
+                        <p class="text-muted small mb-0">Farmer Satisfaction</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Categories Section -->
+        <section class="py-5 bg-light">
+            <div class="container">
+                <div class="text-center mb-5">
+                    <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill fw-bold text-uppercase">Machinery Categories</span>
+                    <h2 class="fw-bold mt-2">Explore Farm Machinery by Category</h2>
+                    <p class="text-muted">Select an equipment category to find available machines near you</p>
+                </div>
+                <div class="row g-3" id="categories-grid">
+                    <!-- Populated dynamically via JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Featured Machinery -->
+        <section class="py-5">
+            <div class="container">
+                <div class="d-flex justify-content-between align-items-end mb-4">
+                    <div>
+                        <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill fw-bold text-uppercase">Top Rented</span>
+                        <h2 class="fw-bold mt-2 mb-0">Featured Agricultural Machinery</h2>
+                    </div>
+                    <button class="btn btn-agri-outline" onclick="switchView('view-equipment')">
+                        View All <i class="fa-solid fa-arrow-right ms-1"></i>
+                    </button>
+                </div>
+                <div class="row g-4" id="featured-equipment-grid">
+                    <!-- Populated via JS -->
+                </div>
+            </div>
+        </section>
+    </section>
+
+
+    <!-- ==========================================
+         VIEW 2: SCREEN 2 — MOBILE LOGIN
+         ========================================== -->
+    <section id="view-login" class="view-section">
+        <div class="container py-5">
+            <div class="row justify-content-center">
+                <div class="col-lg-10 col-xl-9">
+                    <div class="card card-agri overflow-hidden border-0 shadow-lg">
+                        <div class="row g-0">
+                            <!-- Left Visual -->
+                            <div class="col-lg-5 d-none d-lg-flex flex-column justify-content-between p-5 text-white position-relative" 
+                                 style="background: linear-gradient(145deg, #0d3822 0%, #1b5e20 60%, #2e7d32 100%);">
+                                <div>
+                                    <div class="brand-icon mb-4" style="width: 50px; height: 50px; font-size: 1.5rem;">
+                                        <i class="fa-solid fa-tractor"></i>
+                                    </div>
+                                    <span class="badge bg-warning text-dark px-3 py-1 rounded-pill fw-bold mb-3">FAST & SECURE</span>
+                                    <h3 class="fw-bold text-white mb-3">Empowering Indian Farmers</h3>
+                                    <p class="text-white-50 small mb-4">
+                                        Log in effortlessly with your 10-digit mobile number. Instant OTP verification connects you directly to agricultural machinery owners.
+                                    </p>
+                                </div>
+                                <div class="bg-white bg-opacity-10 p-3 rounded-4 border border-white border-opacity-10">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <i class="fa-solid fa-shield-check fs-2 text-warning"></i>
+                                        <div>
+                                            <h6 class="mb-0 fw-bold text-white">Paperless & Transparent</h6>
+                                            <small class="text-white-50">Instant tax invoice receipts & verified equipment</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right Form -->
+                            <div class="col-lg-7 p-4 p-md-5 bg-white">
+                                <div class="mb-4">
+                                    <span class="badge bg-success-subtle text-success px-3 py-1 rounded-pill fw-bold">Step 1 of 2</span>
+                                    <h3 class="fw-bold mt-2 text-dark">Mobile Login</h3>
+                                    <p class="text-muted small">Enter your phone number to receive a secure 6-digit OTP</p>
+                                </div>
+
+                                <div id="login-error" class="alert alert-danger border-0 rounded-3 d-none mb-4"></div>
+
+                                <!-- Form -->
+                                <form id="form-mobile-login" onsubmit="handleSendOtp(event)">
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold text-secondary">I want to login as:</label>
+                                        <div class="row g-2">
+                                            <div class="col-6">
+                                                <input type="radio" class="btn-check" name="login_role" id="login_role_farmer" value="farmer" checked>
+                                                <label class="btn btn-outline-success w-100 py-2 rounded-3 text-start small fw-semibold" for="login_role_farmer">
+                                                    <i class="fa-solid fa-seedling me-1"></i> Farmer
+                                                </label>
+                                            </div>
+                                            <div class="col-6">
+                                                <input type="radio" class="btn-check" name="login_role" id="login_role_owner" value="owner">
+                                                <label class="btn btn-outline-success w-100 py-2 rounded-3 text-start small fw-semibold" for="login_role_owner">
+                                                    <i class="fa-solid fa-tractor me-1"></i> Equipment Owner
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold text-secondary">Your Full Name (Owner / Farmer Name)</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-user"></i></span>
+                                            <input type="text" id="input-name" class="form-control" placeholder="Enter your name (e.g. Ramesh Patel)">
+                                        </div>
+                                        <div class="form-text text-muted small">This name will be displayed on your profile, machinery fleet, and receipts.</div>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <label class="form-label small fw-bold text-secondary">Mobile Number</label>
+                                        <div class="input-group input-group-lg">
+                                            <span class="input-group-text bg-light text-dark fw-bold border-end-0">
+                                                <img src="https://flagcdn.com/w20/in.png" alt="India" class="me-1"> +91
+                                            </span>
+                                            <input type="tel" id="input-mobile" class="form-control bg-light border-start-0 fs-6 fw-semibold" 
+                                                   placeholder="Enter 10-digit mobile" maxlength="10" required>
+                                        </div>
+                                        <div class="form-text text-muted small">Standard Indian 10-digit mobile number format.</div>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-agri-primary w-100 py-3 fs-6 rounded-3">
+                                        <i class="fa-solid fa-paper-plane me-2"></i>Send OTP
+                                    </button>
+                                </form>
+
+                                <!-- Quick Presets -->
+                                <div class="p-3 bg-light rounded-3 border mt-4">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <span class="small fw-bold text-dark"><i class="fa-solid fa-vial text-warning me-1"></i>Quick Test Presets:</span>
+                                        <span class="badge bg-secondary" style="font-size: 0.65rem;">Dev Mode</span>
+                                    </div>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <button class="btn btn-sm btn-outline-dark rounded-pill" onclick="quickFill('9823456789', 'farmer')">Farmer (Suresh)</button>
+                                        <button class="btn btn-sm btn-outline-dark rounded-pill" onclick="quickFill('9845612345', 'owner')">Owner (Murugan)</button>
+                                        <button class="btn btn-sm btn-outline-dark rounded-pill" onclick="quickFill('9876543210', 'admin')">Admin (Ramesh)</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ==========================================
+         VIEW 3: SCREEN 3 — OTP VERIFICATION
+         ========================================== -->
+    <section id="view-otp" class="view-section">
+        <div class="container py-5">
+            <div class="row justify-content-center">
+                <div class="col-md-8 col-lg-6 col-xl-5">
+                    <div class="card card-agri border-0 shadow-lg p-4 p-md-5 bg-white text-center">
+                        <div class="brand-icon mx-auto mb-3" style="width: 60px; height: 60px; font-size: 1.6rem;">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                        <span class="badge bg-success-subtle text-success px-3 py-1 rounded-pill fw-bold mb-2">Step 2 of 2</span>
+                        <h3 class="fw-bold text-dark mb-1">Verify Mobile Number</h3>
+                        <p class="text-muted small mb-3">
+                            OTP sent to <span class="fw-bold text-dark" id="otp-phone-display">+91 98234 56789</span>
+                        </p>
+
+                        <!-- Test OTP Banner -->
+                        <div class="alert alert-warning border-0 rounded-3 text-start small mb-4 py-2 px-3">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <i class="fa-solid fa-code me-1 text-warning"></i>
+                                    <strong>Test OTP Code:</strong> <span class="badge bg-dark text-warning fs-6 px-2 py-1">123456</span>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" onclick="fillTestOtp()">Auto-Fill</button>
+                            </div>
+                        </div>
+
+                        <div id="otp-error" class="alert alert-danger border-0 rounded-3 text-start small mb-4 d-none"></div>
+
+                        <form id="form-otp-verify" onsubmit="handleVerifyOtp(event)">
+                            <div class="otp-container">
+                                <input type="text" maxlength="1" class="otp-box" pattern="[0-9]" inputmode="numeric" required autofocus>
+                                <input type="text" maxlength="1" class="otp-box" pattern="[0-9]" inputmode="numeric" required>
+                                <input type="text" maxlength="1" class="otp-box" pattern="[0-9]" inputmode="numeric" required>
+                                <input type="text" maxlength="1" class="otp-box" pattern="[0-9]" inputmode="numeric" required>
+                                <input type="text" maxlength="1" class="otp-box" pattern="[0-9]" inputmode="numeric" required>
+                                <input type="text" maxlength="1" class="otp-box" pattern="[0-9]" inputmode="numeric" required>
+                            </div>
+
+                            <div class="text-muted small mb-4">
+                                <i class="fa-regular fa-clock me-1"></i>Expires in: <span class="fw-bold text-dark">01:54</span>
+                            </div>
+
+                            <button type="submit" class="btn btn-agri-primary w-100 py-3 rounded-3 fw-bold fs-6 mb-3">
+                                <i class="fa-solid fa-check-circle me-2"></i>Verify OTP & Continue
+                            </button>
+                        </form>
+
+                        <div class="d-flex justify-content-between align-items-center pt-3 border-top small">
+                            <a class="text-decoration-none fw-semibold text-success cursor-pointer" onclick="showAlert('Fresh OTP re-sent via SMS!', 'info')">
+                                <i class="fa-solid fa-rotate-right me-1"></i>Resend OTP
+                            </a>
+                            <a class="text-decoration-none text-muted cursor-pointer" onclick="switchView('view-login')">
+                                <i class="fa-solid fa-pen-to-square me-1"></i>Change Mobile
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ==========================================
+         VIEW 4: EQUIPMENT MARKETPLACE (CATALOG)
+         ========================================== -->
+    <section id="view-equipment" class="view-section">
+        <div class="container py-4">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 pb-3 border-bottom">
+                <div>
+                    <h2 class="fw-bold text-dark mb-0">Agricultural Equipment Marketplace</h2>
+                    <p class="text-muted small mb-0">Find and rent verified tractors, combine harvesters, rotavators, and implements</p>
+                </div>
+                <div class="mt-3 mt-md-0 d-flex align-items-center gap-2">
+                    <label class="small fw-bold text-muted text-nowrap">Sort By:</label>
+                    <select id="market-sort" class="form-select form-select-sm rounded-pill" onchange="renderMarketplace()">
+                        <option value="rating">Highest Rated</option>
+                        <option value="price_asc">Price: Low to High</option>
+                        <option value="price_desc">Price: High to Low</option>
+                        <option value="year_desc">Newest Machinery</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <!-- Filters -->
+                <div class="col-lg-3">
+                    <div class="card card-agri border-0 shadow-sm p-4 bg-white sticky-top" style="top: 85px;">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-filter me-2 text-success"></i>Filters</h5>
+                            <a class="small text-muted cursor-pointer" onclick="resetFilters()">Reset All</a>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Keyword</label>
+                            <input type="text" id="filter-keyword" class="form-control form-control-sm" placeholder="Tractor, Model..." oninput="renderMarketplace()">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Category</label>
+                            <select id="filter-category" class="form-select form-select-sm" onchange="renderMarketplace()">
+                                <option value="All">All Categories</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Location</label>
+                            <input type="text" id="filter-location" class="form-control form-control-sm" placeholder="e.g. Tiruchirappalli" oninput="renderMarketplace()">
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold">Max Daily Rate: <span id="price-val" class="text-success fw-bold">₹10,000</span></label>
+                            <input type="range" class="form-range" id="filter-max-price" min="500" max="10000" step="500" value="10000" oninput="document.getElementById('price-val').textContent='₹'+parseInt(this.value).toLocaleString('en-IN'); renderMarketplace();">
+                        </div>
+
+                        <button class="btn btn-agri-primary w-100 py-2 rounded-3 fw-bold small" onclick="renderMarketplace()">Apply Filters</button>
+                    </div>
+                </div>
+
+                <!-- Equipment Cards -->
+                <div class="col-lg-9">
+                    <div class="row g-4" id="marketplace-grid">
+                        <!-- Populated via JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ==========================================
+         VIEW 5: FARMER DASHBOARD
+         ========================================== -->
+    <section id="view-farmer-dash" class="view-section">
+        <div class="container py-4">
+            <div class="card border-0 rounded-4 shadow-sm mb-4 text-white overflow-hidden" 
+                 style="background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%);">
+                <div class="card-body p-4 p-md-5">
+                    <div class="row align-items-center">
+                        <div class="col-lg-8">
+                            <span class="badge bg-warning text-dark px-3 py-1 rounded-pill fw-bold mb-2">Farmer Dashboard</span>
+                            <h2 class="fw-bold text-white mb-2" id="farmer-dash-welcome">Namaste, Farmer!</h2>
+                            <p class="text-white-50 mb-4">Search machinery, monitor active field bookings, view official tax receipts, and contact verified owners.</p>
+                            <div class="d-flex flex-wrap gap-2">
+                                <button class="btn btn-warning fw-bold rounded-pill px-4" onclick="switchView('view-equipment')">
+                                    <i class="fa-solid fa-magnifying-glass me-2"></i>Rent Equipment
+                                </button>
+                                <button class="btn btn-outline-light rounded-pill px-4" onclick="switchView('view-farmer-bookings')">
+                                    <i class="fa-solid fa-receipt me-2"></i>My Bookings
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="row g-3 mb-4">
+                <div class="col-6 col-md-3">
+                    <div class="card-agri-stat">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="text-muted small fw-bold">Available</span>
+                            <div class="stat-icon bg-success-subtle text-success"><i class="fa-solid fa-tractor"></i></div>
+                        </div>
+                        <h3 class="fw-bold mb-0 text-dark" id="stat-f-avail">10</h3>
+                        <small class="text-muted">Machines ready</small>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card-agri-stat">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="text-muted small fw-bold">My Bookings</span>
+                            <div class="stat-icon bg-primary-subtle text-primary"><i class="fa-solid fa-receipt"></i></div>
+                        </div>
+                        <h3 class="fw-bold mb-0 text-dark" id="stat-f-bookings">2</h3>
+                        <small class="text-muted">Total reservations</small>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card-agri-stat">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="text-muted small fw-bold">Active Rentals</span>
+                            <div class="stat-icon bg-warning-subtle text-warning"><i class="fa-solid fa-truck-fast"></i></div>
+                        </div>
+                        <h3 class="fw-bold mb-0 text-dark" id="stat-f-active">1</h3>
+                        <small class="text-muted">In-field currently</small>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card-agri-stat">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="text-muted small fw-bold">Total Spent</span>
+                            <div class="stat-icon bg-danger-subtle text-danger"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+                        </div>
+                        <h4 class="fw-bold mb-0 text-dark" id="stat-f-spent">₹13,080</h4>
+                        <small class="text-muted">All-time total</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Bookings Table -->
+            <div class="card card-agri border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-0">
+                    <h5 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-clock-rotate-left me-2 text-success"></i>Recent Booking Activity</h5>
+                    <button class="btn btn-sm btn-outline-success rounded-pill px-3" onclick="switchView('view-farmer-bookings')">View All</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light small text-uppercase">
+                            <tr>
+                                <th class="ps-4">Booking #</th>
+                                <th>Equipment</th>
+                                <th>Rental Period</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                                <th class="text-end pe-4">Receipt</th>
+                            </tr>
+                        </thead>
+                        <tbody id="farmer-dash-table">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ==========================================
+         VIEW 6: FARMER BOOKINGS HISTORY
+         ========================================== -->
+    <section id="view-farmer-bookings" class="view-section">
+        <div class="container py-4">
+            <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+                <div>
+                    <h2 class="fw-bold text-dark mb-0">My Rental Bookings</h2>
+                    <p class="text-muted small mb-0">Track live rental status, view official GST tax receipts, and cancel bookings</p>
+                </div>
+                <button class="btn btn-agri-primary rounded-pill px-4" onclick="switchView('view-equipment')">
+                    <i class="fa-solid fa-plus me-1"></i>Rent Equipment
+                </button>
+            </div>
+
+            <div class="row g-4" id="farmer-bookings-cards">
+                <!-- Populated via JS -->
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ==========================================
+         VIEW 7: EQUIPMENT OWNER DASHBOARD
+         ========================================== -->
+    <section id="view-owner-dash" class="view-section">
+        <div class="container py-4">
+            <div class="card border-0 rounded-4 shadow-sm mb-4 text-white overflow-hidden" 
+                 style="background: linear-gradient(135deg, #0d3822 0%, #1b5e20 60%, #2e7d32 100%);">
+                <div class="card-body p-4 p-md-5">
+                    <div class="row align-items-center">
+                        <div class="col-lg-8">
+                            <span class="badge bg-warning text-dark px-3 py-1 rounded-pill fw-bold mb-2">Equipment Owner Portal</span>
+                            <h2 class="fw-bold text-white mb-2" id="owner-dash-welcome">Welcome, Equipment Owner!</h2>
+                            <p class="text-white-50 mb-4">Manage machinery fleet, set daily rental rates, approve/reject farmer requests, and track earnings.</p>
+                            <div class="d-flex flex-wrap gap-2">
+                                <button class="btn btn-warning fw-bold rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#addEquipmentModal">
+                                    <i class="fa-solid fa-plus me-1"></i>List New Equipment
+                                </button>
+                                <button class="btn btn-outline-light rounded-pill px-4" onclick="document.getElementById('owner-requests-box').scrollIntoView({behavior: 'smooth'})">
+                                    <i class="fa-solid fa-bell me-1"></i>Review Requests
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Owner KPIs -->
+            <div class="row g-3 mb-4">
+                <div class="col-6 col-md-3">
+                    <div class="card-agri-stat">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="text-muted small fw-bold">My Fleet</span>
+                            <div class="stat-icon bg-success-subtle text-success"><i class="fa-solid fa-tractor"></i></div>
+                        </div>
+                        <h3 class="fw-bold mb-0 text-dark" id="stat-o-fleet">4</h3>
+                        <small class="text-muted">Machines listed</small>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card-agri-stat">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="text-muted small fw-bold">In-Field Rentals</span>
+                            <div class="stat-icon bg-primary-subtle text-primary"><i class="fa-solid fa-truck-fast"></i></div>
+                        </div>
+                        <h3 class="fw-bold mb-0 text-dark" id="stat-o-active">1</h3>
+                        <small class="text-muted">Active bookings</small>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card-agri-stat">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="text-muted small fw-bold">Pending Requests</span>
+                            <div class="stat-icon bg-warning-subtle text-warning"><i class="fa-solid fa-clock"></i></div>
+                        </div>
+                        <h3 class="fw-bold mb-0 text-dark" id="stat-o-pending">1</h3>
+                        <small class="text-muted">Awaiting approval</small>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card-agri-stat">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="text-muted small fw-bold">Total Earnings</span>
+                            <div class="stat-icon bg-success-subtle text-success"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+                        </div>
+                        <h4 class="fw-bold mb-0 text-success" id="stat-o-earnings">₹41,705</h4>
+                        <small class="text-muted">Rental payouts</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Booking Requests Section -->
+            <div id="owner-requests-box" class="card card-agri border-0 shadow-sm p-4 bg-white mb-4">
+                <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-bell me-2 text-warning"></i>Farmer Rental Requests</h5>
+                <div class="row g-3" id="owner-requests-list">
+                    <!-- Populated via JS -->
+                </div>
+            </div>
+
+            <!-- Fleet Table -->
+            <div class="card card-agri border-0 shadow-sm bg-white overflow-hidden">
+                <div class="card-header bg-white p-4 border-0 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-tractor me-2 text-success"></i>My Equipment Fleet</h5>
+                    <button class="btn btn-sm btn-agri-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#addEquipmentModal">
+                        <i class="fa-solid fa-plus me-1"></i>Add Machine
+                    </button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light small text-uppercase">
+                            <tr>
+                                <th class="ps-4">Equipment</th>
+                                <th>Category</th>
+                                <th>Rates</th>
+                                <th>Status</th>
+                                <th>Approval</th>
+                                <th class="text-end pe-4">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="owner-fleet-table">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ==========================================
+         VIEW 8: ADMIN DASHBOARD
+         ========================================== -->
+    <section id="view-admin-dash" class="view-section">
+        <div class="container py-4">
+            <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+                <div>
+                    <span class="badge bg-danger-subtle text-danger px-3 py-1 rounded-pill fw-bold text-uppercase">Admin Panel</span>
+                    <h2 class="fw-bold text-dark mb-0">AgriRental Command Center</h2>
+                </div>
+                <button class="btn btn-outline-success rounded-pill px-4" onclick="exportDemoCsv()">
+                    <i class="fa-solid fa-file-csv me-2"></i>Export Business Report
+                </button>
+            </div>
+
+            <!-- Admin Stats -->
+            <div class="row g-3 mb-4">
+                <div class="col-6 col-lg-3">
+                    <div class="card-agri-stat">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="text-muted small fw-bold">Gross Volume</span>
+                            <div class="stat-icon bg-success-subtle text-success"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+                        </div>
+                        <h3 class="fw-bold mb-0 text-success">₹54,060</h3>
+                        <small class="text-muted">Total platform rental volume</small>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="card-agri-stat">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="text-muted small fw-bold">Total Users</span>
+                            <div class="stat-icon bg-primary-subtle text-primary"><i class="fa-solid fa-users"></i></div>
+                        </div>
+                        <h3 class="fw-bold mb-0 text-dark">7</h3>
+                        <small class="text-muted">3 Farmers • 3 Owners • 1 Admin</small>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="card-agri-stat">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="text-muted small fw-bold">Machinery Units</span>
+                            <div class="stat-icon bg-warning-subtle text-warning"><i class="fa-solid fa-tractor"></i></div>
+                        </div>
+                        <h3 class="fw-bold mb-0 text-dark">10</h3>
+                        <small class="text-muted">10 Approved & Live</small>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="card-agri-stat">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="text-muted small fw-bold">Bookings</span>
+                            <div class="stat-icon bg-info-subtle text-info"><i class="fa-solid fa-calendar-check"></i></div>
+                        </div>
+                        <h3 class="fw-bold mb-0 text-dark">4</h3>
+                        <small class="text-muted">1 Active • 2 Done • 1 Pending</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="row g-4 mb-4">
+                <div class="col-lg-8">
+                    <div class="card card-agri border-0 shadow-sm p-4 bg-white">
+                        <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-chart-line text-success me-2"></i>Monthly Rental Revenue (₹)</h5>
+                        <div style="height: 250px;"><canvas id="adminRevChart"></canvas></div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card card-agri border-0 shadow-sm p-4 bg-white">
+                        <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-chart-pie text-warning me-2"></i>Category Breakdown</h5>
+                        <div style="height: 250px;"><canvas id="adminCatChart"></canvas></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Moderation / Platform Bookings -->
+            <div class="card card-agri border-0 shadow-sm bg-white overflow-hidden mb-4">
+                <div class="card-header bg-white p-4 border-0">
+                    <h5 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-shield-halved text-success me-2"></i>All Platform Bookings Oversight</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light small text-uppercase">
+                            <tr>
+                                <th class="ps-4">Booking #</th>
+                                <th>Equipment</th>
+                                <th>Farmer</th>
+                                <th>Owner</th>
+                                <th>Dates</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                                <th class="text-end pe-4">Receipt</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-bookings-table">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ==========================================
+         VIEW 9: RECEIPT VIEW
+         ========================================== -->
+    <section id="view-receipt" class="view-section">
+        <div class="container py-4">
+            <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+                <button class="btn btn-outline-secondary rounded-pill px-3" onclick="switchView('view-farmer-bookings')">
+                    <i class="fa-solid fa-arrow-left me-1"></i>Back
+                </button>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-success rounded-pill px-3" onclick="window.print()">
+                        <i class="fa-solid fa-print me-1"></i>Print
+                    </button>
+                    <button class="btn btn-agri-primary rounded-pill px-4" onclick="window.print()">
+                        <i class="fa-solid fa-download me-1"></i>Download PDF
+                    </button>
+                </div>
+            </div>
+
+            <div class="receipt-wrapper" id="receipt-content">
+                <!-- Rendered dynamically via JS -->
+            </div>
+        </div>
+    </section>
+
+</main>
+
+
+<!-- MODAL: Equipment Details -->
+<div class="modal fade" id="equipmentDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 overflow-hidden" id="modal-details-body">
+            <!-- Dynamic Content -->
+        </div>
+    </div>
+</div>
+
+
+<!-- MODAL: Booking & Date Calculation -->
+<div class="modal fade" id="bookingModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0">
+            <div class="modal-header border-0 pb-0">
+                <div>
+                    <span class="badge bg-success-subtle text-success px-3 py-1 rounded-pill fw-bold">Rental Reservation</span>
+                    <h4 class="fw-bold text-dark mt-1 mb-0" id="book-modal-title">Book Equipment</h4>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div id="booking-modal-alert" class="alert alert-danger border-0 rounded-3 d-none mb-3"></div>
+
+                <div class="row g-4">
+                    <div class="col-md-7">
+                        <h6 class="fw-bold mb-3"><i class="fa-solid fa-calendar me-2 text-success"></i>Select Dates</h6>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label small fw-bold">Start Date *</label>
+                                <input type="date" id="book-start-date" class="form-control rounded-3" onchange="calculateModalBooking()">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-bold">End Date *</label>
+                                <input type="date" id="book-end-date" class="form-control rounded-3" onchange="calculateModalBooking()">
+                            </div>
+                        </div>
+
+                        <h6 class="fw-bold mb-2"><i class="fa-solid fa-location-dot me-2 text-danger"></i>Field Delivery Location</h6>
+                        <textarea id="book-address" rows="2" class="form-control rounded-3 mb-3" placeholder="Village name, survey number, landmark"></textarea>
+                    </div>
+
+                    <div class="col-md-5">
+                        <div class="p-3 bg-light rounded-4 border">
+                            <h6 class="fw-bold mb-3 text-dark">Price Summary</h6>
+                            <div class="d-flex justify-content-between small py-1 border-bottom">
+                                <span class="text-muted">Daily Rate:</span>
+                                <span class="fw-bold" id="book-sum-rate">₹2,500</span>
+                            </div>
+                            <div class="d-flex justify-content-between small py-1 border-bottom">
+                                <span class="text-muted">Duration:</span>
+                                <span class="fw-bold text-success" id="book-sum-days">3 Days</span>
+                            </div>
+                            <div class="d-flex justify-content-between small py-1 border-bottom">
+                                <span class="text-muted">Subtotal:</span>
+                                <span class="fw-bold" id="book-sum-subtotal">₹7,500</span>
+                            </div>
+                            <div class="d-flex justify-content-between small py-1 border-bottom">
+                                <span class="text-muted">Refundable Deposit:</span>
+                                <span class="fw-bold" id="book-sum-deposit">₹2,000</span>
+                            </div>
+                            <div class="d-flex justify-content-between small py-1 border-bottom">
+                                <span class="text-muted">GST Tax (5%):</span>
+                                <span class="fw-bold" id="book-sum-tax">₹375</span>
+                            </div>
+                            <div class="d-flex justify-content-between py-2 mt-2 border-top border-2 border-success">
+                                <span class="fw-bold">Total Payable:</span>
+                                <h5 class="fw-bold text-success mb-0" id="book-sum-total">₹9,875</h5>
+                            </div>
+                            <button type="button" class="btn btn-agri-primary w-100 py-3 rounded-3 fw-bold mt-3" onclick="openPaymentFromBooking()">
+                                <i class="fa-solid fa-credit-card me-2"></i>Proceed to Payment
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- MODAL: Payment Sandbox -->
+<div class="modal fade" id="paymentModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-dark">Secure Demo Checkout</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="p-3 bg-light rounded-3 mb-3 d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="small text-muted d-block">Grand Total</span>
+                        <h4 class="fw-bold text-success mb-0" id="pay-modal-amount">₹9,875</h4>
+                    </div>
+                    <span class="badge bg-success-subtle text-success px-3 py-2 fw-bold">Sandbox Mode</span>
+                </div>
+
+                <label class="form-label small fw-bold mb-2">Select Payment Method</label>
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <button type="button" class="btn btn-outline-success w-100 py-2 small fw-semibold active" onclick="setPayMethod('UPI', this)">
+                            <i class="fa-solid fa-qrcode me-1"></i>UPI / QR
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button type="button" class="btn btn-outline-primary w-100 py-2 small fw-semibold" onclick="setPayMethod('CARD', this)">
+                            <i class="fa-regular fa-credit-card me-1"></i>Card
+                        </button>
+                    </div>
+                </div>
+
+                <div id="pay-upi-view" class="text-center p-3 bg-light rounded-3 mb-3 border">
+                    <img id="pay-qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=upi://pay?pa=agrirental@icici%26am=9875" alt="QR" class="img-fluid rounded mb-2" style="width: 120px;">
+                    <small class="d-block text-muted">Scan with Google Pay, PhonePe, or Paytm</small>
+                </div>
+
+                <button type="button" class="btn btn-agri-primary w-100 py-3 rounded-3 fw-bold" onclick="completeDemoPayment()">
+                    <i class="fa-solid fa-shield-check me-2"></i>Authorize Payment & Confirm
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- MODAL: Add Equipment (Owner) -->
+<div class="modal fade" id="addEquipmentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-dark">List New Agricultural Machinery</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="form-add-eq" onsubmit="handleSaveEquipment(event)">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-8">
+                            <label class="form-label small fw-bold">Equipment Title *</label>
+                            <input type="text" id="add-eq-name" class="form-control" placeholder="e.g. Swaraj 744 FE 48 HP Tractor" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Category *</label>
+                            <select id="add-eq-cat" class="form-select" required>
+                                <option value="Tractor">Tractor</option>
+                                <option value="Harvester">Harvester</option>
+                                <option value="Rotavator">Rotavator</option>
+                                <option value="Seed Drill">Seed Drill</option>
+                                <option value="Cultivator">Cultivator</option>
+                                <option value="Water Pump">Water Pump</option>
+                                <option value="Plough">Plough</option>
+                                <option value="Thresher">Thresher</option>
+                                <option value="Sprayer">Sprayer</option>
+                                <option value="Other Agricultural Machinery">Other</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Brand *</label>
+                            <input type="text" id="add-eq-brand" class="form-control" placeholder="e.g. Swaraj" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Model *</label>
+                            <input type="text" id="add-eq-model" class="form-control" placeholder="744 FE" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Year *</label>
+                            <input type="number" id="add-eq-year" class="form-control" value="2023" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Daily Rate (₹) *</label>
+                            <input type="number" id="add-eq-price" class="form-control" placeholder="2400" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Security Deposit (₹)</label>
+                            <input type="number" id="add-eq-deposit" class="form-control" placeholder="2000" value="2000">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold">Location *</label>
+                            <input type="text" id="add-eq-loc" class="form-control" placeholder="Tiruchirappalli, Tamil Nadu" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold">Description *</label>
+                            <textarea id="add-eq-desc" rows="2" class="form-control" placeholder="Machinery features, capacity..." required></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold">Image URL</label>
+                            <input type="url" id="add-eq-img" class="form-control" placeholder="https://images.unsplash.com/..." value="https://images.unsplash.com/photo-1592878904946-b3cd8ae243d0?auto=format&fit=crop&w=800&q=80">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-agri-primary w-100 py-3 rounded-3 fw-bold">
+                        <i class="fa-solid fa-cloud-arrow-up me-2"></i>Publish Machinery
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer class="footer-agri">
+    <div class="container text-center text-md-start">
+        <div class="row g-4 align-items-center">
+            <div class="col-md-6">
+                <div class="d-flex align-items-center justify-content-center justify-content-md-start gap-2 mb-2">
+                    <div class="brand-icon" style="width: 36px; height: 36px; font-size: 1rem;"><i class="fa-solid fa-tractor"></i></div>
+                    <span class="fs-5 fw-bold text-white">AgriRental Portal</span>
+                </div>
+                <p class="small text-muted mb-0">Empowering Indian farmers through transparent, accessible farm machinery rentals.</p>
+            </div>
+            <div class="col-md-6 text-center text-md-end">
+                <span class="badge bg-warning text-dark fs-6 py-2 px-3 rounded-pill fw-bold">
+                    <i class="fa-solid fa-headset me-1"></i>Helpline: 1800-180-1551
+                </span>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- Bootstrap 5 JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Portal Application Data & Interactivity Controller -->
+<script>
+// Mock initial database
+const defaultCategories = [
+    { id: 1, name: 'Tractor', icon: 'fa-tractor' },
+    { id: 2, name: 'Harvester', icon: 'fa-wheat-awn' },
+    { id: 3, name: 'Rotavator', icon: 'fa-gear' },
+    { id: 4, name: 'Seed Drill', icon: 'fa-seedling' },
+    { id: 5, name: 'Cultivator', icon: 'fa-bars-staggered' },
+    { id: 6, name: 'Water Pump', icon: 'fa-faucet-drip' },
+    { id: 7, name: 'Plough', icon: 'fa-shovels' },
+    { id: 8, name: 'Thresher', icon: 'fa-fan' },
+    { id: 9, name: 'Sprayer', icon: 'fa-spray-can-sparkles' },
+    { id: 10, name: 'Other Agricultural Machinery', icon: 'fa-toolbox' }
+];
+
+const defaultEquipment = [
+    { id: 1, name: 'Mahindra 575 DI Sarpanch 47 HP Tractor', cat: 'Tractor', brand: 'Mahindra', model: '575 DI', year: 2023, condition: 'Excellent', location: 'Tiruchirappalli, Tamil Nadu', rate: 2500, deposit: 2000, owner: 'Murugan Palanisamy', ownerPhone: '9845612345', status: 'available', approval: 'approved', rating: 4.9, reviews: 18, img: 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=800&q=80', desc: 'Reliable 47 HP diesel tractor ideal for rotavator and heavy hauling.' },
+    { id: 2, name: 'John Deere 5310 4WD Heavy Tractor (55 HP)', cat: 'Tractor', brand: 'John Deere', model: '5310 4WD', year: 2024, condition: 'Excellent', location: 'Ludhiana, Punjab', rate: 3200, deposit: 3000, owner: 'Balwinder Singh', ownerPhone: '9812345678', status: 'available', approval: 'approved', rating: 5.0, reviews: 24, img: 'https://images.unsplash.com/photo-1628187886477-80bebbff7137?auto=format&fit=crop&w=800&q=80', desc: '55 HP heavy tractor with high hydraulic capacity. Power steering.' },
+    { id: 3, name: 'Preet 987 Combine Harvester', cat: 'Harvester', brand: 'Preet', model: '987 Deluxe', year: 2023, condition: 'Excellent', location: 'Karnal, Haryana', rate: 7500, deposit: 5000, owner: 'Balwinder Singh', ownerPhone: '9812345678', status: 'available', approval: 'approved', rating: 4.8, reviews: 12, img: 'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=800&q=80', desc: 'High capacity paddy and wheat combine harvester with 14-foot cutter bar.' },
+    { id: 4, name: 'Shaktiman Regular Light Rotavator', cat: 'Rotavator', brand: 'Shaktiman', model: 'Semi-Champion', year: 2022, condition: 'Good', location: 'Coimbatore, Tamil Nadu', rate: 1200, deposit: 1000, owner: 'Murugan Palanisamy', ownerPhone: '9845612345', status: 'available', approval: 'approved', rating: 4.7, reviews: 9, img: 'https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=800&q=80', desc: '6-foot rotavator with boron steel blades for fast seedbed preparation.' },
+    { id: 5, name: 'Dasmesh 912 Automatic 9-Row Seed Drill', cat: 'Seed Drill', brand: 'Dasmesh', model: '912 Zero Till', year: 2023, condition: 'Excellent', location: 'Amritsar, Punjab', rate: 950, deposit: 1000, owner: 'Balwinder Singh', ownerPhone: '9812345678', status: 'available', approval: 'approved', rating: 4.85, reviews: 8, img: 'https://images.unsplash.com/photo-1530507629858-e4977d30e9e0?auto=format&fit=crop&w=800&q=80', desc: 'Precision zero-till seed cum fertilizer drill machine for wheat and mustard.' },
+    { id: 6, name: 'Fieldking 9-Tyne Spring Cultivator', cat: 'Cultivator', brand: 'Fieldking', model: 'FKCCSL-9', year: 2023, condition: 'Excellent', location: 'Tiruchirappalli, Tamil Nadu', rate: 800, deposit: 800, owner: 'Murugan Palanisamy', ownerPhone: '9845612345', status: 'available', approval: 'approved', rating: 4.75, reviews: 14, img: 'https://images.unsplash.com/photo-1527842891421-42eec6e703ea?auto=format&fit=crop&w=800&q=80', desc: 'Heavy duty spring-loaded cultivator for rocky soil.' },
+    { id: 7, name: 'Kirloskar 5 HP Diesel Water Pump', cat: 'Water Pump', brand: 'Kirloskar', model: 'MegaFlow 5D', year: 2023, condition: 'Good', location: 'Thanjavur, Tamil Nadu', rate: 600, deposit: 500, owner: 'Murugan Palanisamy', ownerPhone: '9845612345', status: 'available', approval: 'approved', rating: 4.6, reviews: 11, img: 'https://images.unsplash.com/photo-1586771107445-d3ca888129ff?auto=format&fit=crop&w=800&q=80', desc: 'High discharge portable diesel water pump for canal and field irrigation.' },
+    { id: 8, name: 'Lemken Opal 090 3-Bottom Reversible Plough', cat: 'Plough', brand: 'Lemken', model: 'Opal 090', year: 2023, condition: 'Excellent', location: 'Indore, Madhya Pradesh', rate: 1400, deposit: 1500, owner: 'Rajesh Deshmukh', ownerPhone: '9871122334', status: 'available', approval: 'approved', rating: 4.9, reviews: 7, img: 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=800&q=80', desc: 'Hydraulic reversible mouldboard plough for deep soil turning.' },
+    { id: 9, name: 'Sonalika Multi-Crop High Speed Thresher', cat: 'Thresher', brand: 'Sonalika', model: 'AgriMax 400', year: 2022, condition: 'Good', location: 'Nashik, Maharashtra', rate: 2000, deposit: 1500, owner: 'Rajesh Deshmukh', ownerPhone: '9871122334', status: 'available', approval: 'approved', rating: 4.65, reviews: 10, img: 'https://images.unsplash.com/photo-1595974482597-4b8da8879bc5?auto=format&fit=crop&w=800&q=80', desc: 'Multi-crop thresher for wheat, gram, pulses and soybean.' },
+    { id: 10, name: 'Aspee Tractor Mounted 500L Boom Sprayer', cat: 'Sprayer', brand: 'Aspee', model: 'HTP-500 Deluxe', year: 2024, condition: 'Excellent', location: 'Nagpur, Maharashtra', rate: 1100, deposit: 1000, owner: 'Rajesh Deshmukh', ownerPhone: '9871122334', status: 'available', approval: 'approved', rating: 4.8, reviews: 6, img: 'https://images.unsplash.com/photo-1615811361523-6bd03d7748e7?auto=format&fit=crop&w=800&q=80', desc: '500-liter chemical tank with 12m folding boom and ceramic nozzles.' }
+];
+
+let appState = {
+    currentUser: null, // { name, mobile, role }
+    equipment: JSON.parse(localStorage.getItem('agri_eq')) || defaultEquipment,
+    bookings: JSON.parse(localStorage.getItem('agri_bk')) || [
+        { id: 1, bno: 'AGR-BK-2026-001', eqId: 1, eqName: 'Mahindra 575 DI Sarpanch 47 HP Tractor', farmer: 'Karthik Raja', farmerPhone: '9894012345', owner: 'Murugan Palanisamy', sdate: '2026-09-10', edate: '2026-09-12', days: 3, rate: 2500, amount: 7500, deposit: 2000, tax: 375, total: 9875, status: 'completed', txn: 'TXN-UPI-987123984', method: 'UPI' },
+        { id: 2, bno: 'AGR-BK-2026-002', eqId: 3, eqName: 'Preet 987 Combine Harvester', farmer: 'Ananya Sharma', farmerPhone: '9834567890', owner: 'Balwinder Singh', sdate: '2026-09-15', edate: '2026-09-17', days: 3, rate: 7500, amount: 22500, deposit: 5000, tax: 1125, total: 28625, status: 'completed', txn: 'TXN-CARD-441298451', method: 'CARD' },
+        { id: 3, bno: 'AGR-BK-2026-003', eqId: 2, eqName: 'John Deere 5310 4WD Heavy Tractor (55 HP)', farmer: 'Suresh Patel', farmerPhone: '9823456789', owner: 'Balwinder Singh', sdate: '2026-10-05', edate: '2026-10-07', days: 3, rate: 3200, amount: 9600, deposit: 3000, tax: 480, total: 13080, status: 'confirmed', txn: 'TXN-UPI-771299834', method: 'UPI' },
+        { id: 4, bno: 'AGR-BK-2026-004', eqId: 6, eqName: 'Fieldking 9-Tyne Spring Cultivator', farmer: 'Karthik Raja', farmerPhone: '9894012345', owner: 'Murugan Palanisamy', sdate: '2026-10-10', edate: '2026-10-11', days: 2, rate: 800, amount: 1600, deposit: 800, tax: 80, total: 2480, status: 'pending', txn: '', method: '' }
+    ],
+    selectedEquipment: null,
+    pendingBookingCalc: null
+};
+
+// Save to storage
+function saveState() {
+    localStorage.setItem('agri_eq', JSON.stringify(appState.equipment));
+    localStorage.setItem('agri_bk', JSON.stringify(appState.bookings));
+}
+
+// Navigation router
+function switchView(viewId) {
+    document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
+    const target = document.getElementById(viewId);
+    if (target) {
+        target.classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Refresh view specific contents
+    if (viewId === 'view-landing') renderLanding();
+    if (viewId === 'view-equipment') renderMarketplace();
+    if (viewId === 'view-farmer-dash') renderFarmerDashboard();
+    if (viewId === 'view-farmer-bookings') renderFarmerBookings();
+    if (viewId === 'view-owner-dash') renderOwnerDashboard();
+    if (viewId === 'view-admin-dash') renderAdminDashboard();
+}
+
+function switchRoleView() {
+    if (!appState.currentUser) { switchView('view-login'); return; }
+    if (appState.currentUser.role === 'farmer') switchView('view-farmer-dash');
+    else if (appState.currentUser.role === 'owner') switchView('view-owner-dash');
+    else if (appState.currentUser.role === 'admin') switchView('view-admin-dash');
+}
+
+// Alerts
+function showAlert(msg, type = 'success') {
+    const alertBox = document.getElementById('global-alert');
+    const msgEl = document.getElementById('global-alert-msg');
+    const container = document.getElementById('global-alert-container');
+    alertBox.className = `alert alert-${type} alert-dismissible fade show border-0 shadow-sm`;
+    msgEl.innerHTML = msg;
+    container.style.display = 'block';
+    setTimeout(hideAlert, 5000);
+}
+function hideAlert() {
+    document.getElementById('global-alert-container').style.display = 'none';
+}
+
+// 1. Landing View
+function renderLanding() {
+    const catContainer = document.getElementById('categories-grid');
+    catContainer.innerHTML = '';
+    defaultCategories.forEach(cat => {
+        catContainer.innerHTML += `
+            <div class="col-6 col-md-4 col-lg-2-4" style="flex: 0 0 auto; width: 20%;">
+                <div class="category-pill h-100 cursor-pointer" onclick="filterByCategory('${cat.name}')">
+                    <div class="category-pill-icon"><i class="fa-solid ${cat.icon}"></i></div>
+                    <h6 class="fw-bold mb-1 small">${cat.name}</h6>
+                    <small class="text-muted d-none d-sm-block" style="font-size: 0.72rem;">Browse Available</small>
+                </div>
+            </div>`;
+    });
+
+    const featContainer = document.getElementById('featured-equipment-grid');
+    featContainer.innerHTML = '';
+    appState.equipment.slice(0, 3).forEach(eq => {
+        featContainer.innerHTML += createEquipmentCardHtml(eq);
+    });
+}
+
+function filterByCategory(catName) {
+    switchView('view-equipment');
+    const select = document.getElementById('filter-category');
+    select.value = catName;
+    renderMarketplace();
+}
+
+function performLandingSearch() {
+    const q = document.getElementById('landing-search').value;
+    const loc = document.getElementById('landing-loc').value;
+    switchView('view-equipment');
+    document.getElementById('filter-keyword').value = q;
+    document.getElementById('filter-location').value = loc;
+    renderMarketplace();
+}
+
+// 2. Equipment Marketplace
+function renderMarketplace() {
+    // Populate category dropdown if needed
+    const catSelect = document.getElementById('filter-category');
+    if (catSelect.options.length <= 1) {
+        defaultCategories.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.name;
+            opt.textContent = c.name;
+            catSelect.appendChild(opt);
+        });
+    }
+
+    const keyword = (document.getElementById('filter-keyword').value || '').toLowerCase();
+    const cat = document.getElementById('filter-category').value;
+    const loc = (document.getElementById('filter-location').value || '').toLowerCase();
+    const maxP = parseFloat(document.getElementById('filter-max-price').value) || 100000;
+    const sort = document.getElementById('market-sort').value;
+
+    let filtered = appState.equipment.filter(e => {
+        const matchK = !keyword || e.name.toLowerCase().includes(keyword) || e.brand.toLowerCase().includes(keyword);
+        const matchC = cat === 'All' || e.cat === cat;
+        const matchL = !loc || e.location.toLowerCase().includes(loc);
+        const matchP = e.rate <= maxP;
+        return matchK && matchC && matchL && matchP;
+    });
+
+    if (sort === 'price_asc') filtered.sort((a,b) => a.rate - b.rate);
+    else if (sort === 'price_desc') filtered.sort((a,b) => b.rate - a.rate);
+    else if (sort === 'year_desc') filtered.sort((a,b) => b.year - a.year);
+    else filtered.sort((a,b) => b.rating - a.rating);
+
+    const grid = document.getElementById('marketplace-grid');
+    grid.innerHTML = '';
+    if (filtered.length === 0) {
+        grid.innerHTML = '<div class="col-12 text-center py-5 text-muted"><i class="fa-solid fa-ban fs-1 mb-3"></i><h5>No equipment found matching filters.</h5></div>';
+    } else {
+        filtered.forEach(eq => {
+            grid.innerHTML += createEquipmentCardHtml(eq);
+        });
+    }
+}
+
+function createEquipmentCardHtml(eq) {
+    const isAvail = eq.status === 'available';
+    const badgeCls = isAvail ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning';
+    return `
+    <div class="col-md-6 col-xl-4">
+        <div class="equipment-card">
+            <div class="equipment-img-wrapper">
+                <img src="${eq.img}" alt="${eq.name}" class="equipment-img">
+                <span class="badge-equipment-category">${eq.cat}</span>
+                <span class="badge rounded-pill ${badgeCls} badge-availability px-3 py-1 fw-bold">${eq.status}</span>
+            </div>
+            <div class="equipment-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="badge bg-light text-secondary border small">${eq.brand} • ${eq.year}</span>
+                    <span class="badge bg-warning text-dark"><i class="fa-solid fa-star me-1"></i>${eq.rating} (${eq.reviews})</span>
+                </div>
+                <h5 class="fw-bold text-dark fs-6 mb-1" style="min-height: 44px;">${eq.name}</h5>
+                <div class="small text-muted mb-1"><i class="fa-solid fa-user me-1 text-success"></i>${eq.owner}</div>
+                <div class="small text-muted mb-3 text-truncate"><i class="fa-solid fa-location-dot me-1 text-danger"></i>${eq.location}</div>
+                <div class="mt-auto pt-3 border-top">
+                    <div class="d-flex justify-content-between align-items-baseline mb-3">
+                        <div>
+                            <span class="equipment-price-tag">₹${eq.rate.toLocaleString('en-IN')}</span>
+                            <span class="equipment-price-period">/ day</span>
+                        </div>
+                        <small class="text-muted">Deposit: ₹${eq.deposit}</small>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <button class="btn btn-sm btn-outline-secondary w-100 rounded-pill py-2 fw-semibold" onclick="openEquipmentDetails(${eq.id})">Details</button>
+                        </div>
+                        <div class="col-6">
+                            <button class="btn btn-sm btn-agri-primary w-100 rounded-pill py-2 fw-semibold" onclick="startBooking(${eq.id})">Book Now</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>`;
+}
+
+function resetFilters() {
+    document.getElementById('filter-keyword').value = '';
+    document.getElementById('filter-category').value = 'All';
+    document.getElementById('filter-location').value = '';
+    document.getElementById('filter-max-price').value = 10000;
+    document.getElementById('price-val').textContent = '₹10,000';
+    renderMarketplace();
+}
+
+// 3. Details Modal
+function openEquipmentDetails(id) {
+    const eq = appState.equipment.find(e => e.id === id);
+    if (!eq) return;
+    appState.selectedEquipment = eq;
+
+    // Check booked ranges
+    const conflicts = appState.bookings.filter(b => b.eqId === eq.id && ['confirmed','active'].includes(b.status));
+    let bookedHtml = '';
+    if (conflicts.length > 0) {
+        bookedHtml = `<div class="alert alert-warning py-2 px-3 small border-0 rounded-3 mb-3">
+            <i class="fa-solid fa-calendar-xmark me-1 text-danger"></i><strong>Booked Dates:</strong> ` +
+            conflicts.map(c => `${c.sdate} to ${c.edate}`).join(', ') + `</div>`;
+    }
+
+    document.getElementById('modal-details-body').innerHTML = `
+        <div class="position-relative bg-dark text-center" style="max-height: 320px; overflow: hidden;">
+            <img src="${eq.img}" class="img-fluid w-100" style="height: 320px; object-fit: cover;">
+            <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="p-4 bg-white">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                    <span class="badge bg-success-subtle text-success mb-1">${eq.cat}</span>
+                    <h4 class="fw-bold text-dark mb-0">${eq.name}</h4>
+                    <small class="text-muted"><i class="fa-solid fa-location-dot text-danger me-1"></i>${eq.location}</small>
+                </div>
+                <div class="text-end">
+                    <span class="display-6 fw-bold text-success">₹${eq.rate.toLocaleString('en-IN')}</span>
+                    <small class="text-muted d-block">per day</small>
+                </div>
+            </div>
+            <p class="text-secondary small mb-3">${eq.desc}</p>
+            ${bookedHtml}
+            <div class="row g-2 mb-4 small">
+                <div class="col-4"><div class="p-2 bg-light rounded text-center"><span class="text-muted d-block">Brand:</span><strong>${eq.brand}</strong></div></div>
+                <div class="col-4"><div class="p-2 bg-light rounded text-center"><span class="text-muted d-block">Condition:</span><strong>${eq.condition}</strong></div></div>
+                <div class="col-4"><div class="p-2 bg-light rounded text-center"><span class="text-muted d-block">Deposit:</span><strong>₹${eq.deposit}</strong></div></div>
+            </div>
+            <div class="card p-3 bg-light border mb-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <small class="text-muted">Equipment Owner</small>
+                        <h6 class="fw-bold mb-0 text-dark">${eq.owner}</h6>
+                        <small class="text-success"><i class="fa-solid fa-circle-check me-1"></i>Verified Owner</small>
+                    </div>
+                    <a href="tel:${eq.ownerPhone}" class="btn btn-sm btn-outline-success rounded-pill px-3">
+                        <i class="fa-solid fa-phone me-1"></i>+91 ${eq.ownerPhone}
+                    </a>
+                </div>
+            </div>
+            <div class="d-grid">
+                <button class="btn btn-agri-primary py-3 rounded-3 fw-bold fs-6" onclick="startBookingFromDetails()">
+                    <i class="fa-solid fa-calendar-check me-2"></i>Book This Equipment
+                </button>
+            </div>
+        </div>`;
+
+    new bootstrap.Modal(document.getElementById('equipmentDetailsModal')).show();
+}
+
+function startBookingFromDetails() {
+    bootstrap.Modal.getInstance(document.getElementById('equipmentDetailsModal')).hide();
+    startBooking(appState.selectedEquipment.id);
+}
+
+// 4. Booking & Double-Booking Prevention
+function startBooking(id) {
+    if (!appState.currentUser) {
+        showAlert('Please verify your mobile number to book farm machinery.', 'info');
+        switchView('view-login');
+        return;
+    }
+
+    const eq = appState.equipment.find(e => e.id === id);
+    if (!eq) return;
+    appState.selectedEquipment = eq;
+
+    document.getElementById('book-modal-title').textContent = `Book: ${eq.name}`;
+    document.getElementById('book-sum-rate').textContent = `₹${eq.rate.toLocaleString('en-IN')}`;
+
+    // Defaults
+    const today = new Date().toISOString().split('T')[0];
+    const end = new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0];
+    document.getElementById('book-start-date').value = today;
+    document.getElementById('book-start-date').min = today;
+    document.getElementById('book-end-date').value = end;
+    document.getElementById('book-end-date').min = today;
+
+    calculateModalBooking();
+    new bootstrap.Modal(document.getElementById('bookingModal')).show();
+}
+
+function calculateModalBooking() {
+    const eq = appState.selectedEquipment;
+    const sDate = document.getElementById('book-start-date').value;
+    const eDate = document.getElementById('book-end-date').value;
+    const alertBox = document.getElementById('booking-modal-alert');
+
+    if (!sDate || !eDate || eDate < sDate) {
+        alertBox.textContent = 'Invalid dates selected. End date must be on or after start date.';
+        alertBox.classList.remove('d-none');
+        return;
+    }
+
+    // SERVER-SIDE DOUBLE BOOKING PREVENT CHECK (Simulated)
+    const isOverlapping = appState.bookings.some(b => {
+        return b.eqId === eq.id && ['confirmed','active'].includes(b.status) &&
+               (sDate <= b.edate && eDate >= b.sdate);
+    });
+
+    if (isOverlapping) {
+        alertBox.innerHTML = '<i class="fa-solid fa-ban me-1"></i>Equipment is already reserved on overlapping dates. Please choose different dates.';
+        alertBox.classList.remove('d-none');
+    } else {
+        alertBox.classList.add('d-none');
+    }
+
+    const start = new Date(sDate);
+    const end = new Date(eDate);
+    const days = Math.ceil(Math.abs(end - start) / 86400000) + 1;
+    const subtotal = days * eq.rate;
+    const tax = Math.round(subtotal * 0.05);
+    const total = subtotal + eq.deposit + tax;
+
+    document.getElementById('book-sum-days').textContent = `${days} Days`;
+    document.getElementById('book-sum-subtotal').textContent = `₹${subtotal.toLocaleString('en-IN')}`;
+    document.getElementById('book-sum-deposit').textContent = `₹${eq.deposit.toLocaleString('en-IN')}`;
+    document.getElementById('book-sum-tax').textContent = `₹${tax.toLocaleString('en-IN')}`;
+    document.getElementById('book-sum-total').textContent = `₹${total.toLocaleString('en-IN')}`;
+
+    appState.pendingBookingCalc = { days, subtotal, tax, deposit: eq.deposit, total, sDate, eDate };
+}
+
+function openPaymentFromBooking() {
+    const alertBox = document.getElementById('booking-modal-alert');
+    if (!alertBox.classList.contains('d-none')) {
+        showAlert('Please resolve date conflict before proceeding.', 'danger');
+        return;
+    }
+
+    bootstrap.Modal.getInstance(document.getElementById('bookingModal')).hide();
+    document.getElementById('pay-modal-amount').textContent = `₹${appState.pendingBookingCalc.total.toLocaleString('en-IN')}`;
+    new bootstrap.Modal(document.getElementById('paymentModal')).show();
+}
+
+// 5. Payment & Receipt
+let currentPayMethod = 'UPI';
+function setPayMethod(m, btn) {
+    currentPayMethod = m;
+    btn.parentElement.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('pay-upi-view').style.display = (m === 'UPI') ? 'block' : 'none';
+}
+
+function completeDemoPayment() {
+    bootstrap.Modal.getInstance(document.getElementById('paymentModal')).hide();
+    const eq = appState.selectedEquipment;
+    const calc = appState.pendingBookingCalc;
+    const bno = 'AGR-BK-2026-' + Math.floor(100 + Math.random() * 900);
+    const txn = 'TXN-' + currentPayMethod + '-' + Math.floor(100000 + Math.random() * 900000);
+
+    const newBooking = {
+        id: Date.now(),
+        bno: bno,
+        eqId: eq.id,
+        eqName: eq.name,
+        farmer: appState.currentUser.name,
+        farmerPhone: appState.currentUser.mobile,
+        owner: eq.owner,
+        sdate: calc.sDate,
+        edate: calc.eDate,
+        days: calc.days,
+        rate: eq.rate,
+        amount: calc.subtotal,
+        deposit: calc.deposit,
+        tax: calc.tax,
+        total: calc.total,
+        status: 'confirmed',
+        txn: txn,
+        method: currentPayMethod
+    };
+
+    appState.bookings.unshift(newBooking);
+    saveState();
+
+    showAlert(`Payment Successful! Booking ${bno} confirmed.`, 'success');
+    viewReceipt(newBooking.id);
+}
+
+function viewReceipt(bookingId) {
+    const bk = appState.bookings.find(b => b.id == bookingId);
+    if (!bk) return;
+
+    const rno = 'RCP-2026-' + String(bk.id).slice(-4);
+    const html = `
+        <div class="receipt-header d-flex justify-content-between align-items-start">
+            <div class="d-flex align-items-center gap-3">
+                <div class="brand-icon" style="width: 55px; height: 55px; font-size: 1.5rem;"><i class="fa-solid fa-tractor"></i></div>
+                <div>
+                    <h3 class="fw-extrabold text-success mb-0 lh-1">AGRICULTURAL EQUIPMENT RENTAL PORTAL</h3>
+                    <small class="text-muted text-uppercase fw-semibold">Ministry of Agriculture • Digital Krishi Seva</small>
+                    <div class="small text-muted mt-1">Helpline: 1800-180-1551 | Tiruchirappalli, Tamil Nadu</div>
+                </div>
+            </div>
+            <div class="receipt-qr-box">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=75x75&data=${bk.bno}" alt="QR">
+            </div>
+        </div>
+        <div class="row g-2 py-3 mb-4 rounded-3 bg-light border small">
+            <div class="col-3"><span class="text-muted d-block">RECEIPT NO</span><strong>${rno}</strong></div>
+            <div class="col-3"><span class="text-muted d-block">BOOKING ID</span><strong>${bk.bno}</strong></div>
+            <div class="col-3"><span class="text-muted d-block">DATE</span><strong>${new Date().toLocaleDateString('en-IN')}</strong></div>
+            <div class="col-3"><span class="text-muted d-block">STATUS</span><span class="badge bg-success">PAID & CONFIRMED</span></div>
+        </div>
+        <div class="row g-3 mb-4 small">
+            <div class="col-6"><div class="p-3 border rounded bg-white"><span class="badge bg-success-subtle text-success mb-1">FARMER (RENTER)</span><h6>${bk.farmer}</h6><div>+91 ${bk.farmerPhone}</div></div></div>
+            <div class="col-6"><div class="p-3 border rounded bg-white"><span class="badge bg-primary-subtle text-primary mb-1">EQUIPMENT OWNER</span><h6>${bk.owner}</h6><div>Verified Machinery Provider</div></div></div>
+        </div>
+        <table class="table table-bordered mb-4 small">
+            <thead class="table-light"><tr><th>Equipment</th><th>Dates</th><th>Days</th><th>Rate</th><th class="text-end">Total</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td><strong>${bk.eqName}</strong></td>
+                    <td>${bk.sdate} to ${bk.edate}</td>
+                    <td>${bk.days}</td>
+                    <td>₹${bk.rate}</td>
+                    <td class="text-end fw-bold">₹${bk.amount.toLocaleString('en-IN')}</td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="d-flex justify-content-end mb-4">
+            <div class="p-3 bg-light rounded border" style="width: 320px;">
+                <div class="d-flex justify-content-between small"><span>Subtotal:</span><span>₹${bk.amount.toLocaleString('en-IN')}</span></div>
+                <div class="d-flex justify-content-between small"><span>Security Deposit:</span><span>₹${bk.deposit.toLocaleString('en-IN')}</span></div>
+                <div class="d-flex justify-content-between small"><span>GST (5%):</span><span>₹${bk.tax.toLocaleString('en-IN')}</span></div>
+                <hr class="my-2">
+                <div class="d-flex justify-content-between fw-bold text-success fs-5"><span>Grand Total:</span><span>₹${bk.total.toLocaleString('en-IN')}</span></div>
+            </div>
+        </div>
+        <div class="p-3 border rounded bg-white mb-4 d-flex justify-content-between align-items-center small">
+            <div><span>Method: <strong>${bk.method || 'UPI'}</strong></span> | <span>Txn ID: <code>${bk.txn || 'TXN-ONLINE-98712'}</code></span></div>
+            <div class="receipt-stamp">VERIFIED TAX INVOICE</div>
+        </div>`;
+
+    document.getElementById('receipt-content').innerHTML = html;
+    switchView('view-receipt');
+}
+
+// 6. Dashboards
+function renderFarmerDashboard() {
+    document.getElementById('farmer-dash-welcome').textContent = `Namaste, ${appState.currentUser.name}!`;
+    const myBks = appState.bookings.filter(b => b.farmerPhone === appState.currentUser.mobile);
+    const activeCount = myBks.filter(b => ['confirmed','active'].includes(b.status)).length;
+    const totalSpent = myBks.reduce((acc, b) => acc + (b.total || 0), 0);
+
+    document.getElementById('stat-f-bookings').textContent = myBks.length;
+    document.getElementById('stat-f-active').textContent = activeCount;
+    document.getElementById('stat-f-spent').textContent = `₹${totalSpent.toLocaleString('en-IN')}`;
+
+    const tbody = document.getElementById('farmer-dash-table');
+    tbody.innerHTML = '';
+    myBks.slice(0, 5).forEach(b => {
+        tbody.innerHTML += `
+            <tr>
+                <td class="ps-4 fw-bold small">${b.bno}</td>
+                <td><strong>${b.eqName}</strong></td>
+                <td class="small">${b.sdate} (${b.days}d)</td>
+                <td class="fw-bold text-success small">₹${b.total.toLocaleString('en-IN')}</td>
+                <td><span class="badge bg-success-subtle text-success px-2 py-1">${b.status}</span></td>
+                <td class="text-end pe-4">
+                    <button class="btn btn-sm btn-light border rounded-pill" onclick="viewReceipt(${b.id})"><i class="fa-solid fa-file-invoice text-success"></i></button>
+                </td>
+            </tr>`;
+    });
+}
+
+function renderFarmerBookings() {
+    const container = document.getElementById('farmer-bookings-cards');
+    container.innerHTML = '';
+    const myBks = appState.bookings.filter(b => b.farmerPhone === appState.currentUser.mobile);
+    if (myBks.length === 0) {
+        container.innerHTML = '<div class="col-12 text-center py-5 text-muted">You have not booked any machinery yet.</div>';
+        return;
+    }
+    myBks.forEach(b => {
+        container.innerHTML += `
+        <div class="col-md-6">
+            <div class="card card-agri border-0 shadow-sm p-4 bg-white h-100">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="badge bg-light text-dark border">${b.bno}</span>
+                    <span class="badge bg-success-subtle text-success">${b.status}</span>
+                </div>
+                <h5 class="fw-bold text-dark mb-2">${b.eqName}</h5>
+                <div class="small text-muted mb-3">
+                    <div><i class="fa-regular fa-calendar me-1"></i>${b.sdate} to ${b.edate} (${b.days} Days)</div>
+                    <div><i class="fa-solid fa-user me-1"></i>Owner: ${b.owner}</div>
+                    <div class="fw-bold text-success mt-1">Paid: ₹${b.total.toLocaleString('en-IN')}</div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center pt-2 border-top mt-auto">
+                    <button class="btn btn-sm btn-outline-success rounded-pill px-3" onclick="viewReceipt(${b.id})">
+                        <i class="fa-solid fa-file-invoice me-1"></i>View Receipt
+                    </button>
+                    ${b.status === 'confirmed' ? `<button class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="cancelBooking(${b.id})">Cancel</button>` : ''}
+                </div>
+            </div>
+        </div>`;
+    });
+}
+
+function cancelBooking(id) {
+    if (confirm('Are you sure you want to cancel this booking? Refund will be initiated.')) {
+        const bk = appState.bookings.find(b => b.id === id);
+        if (bk) {
+            bk.status = 'cancelled';
+            saveState();
+            showAlert('Booking cancelled successfully.', 'info');
+            renderFarmerBookings();
+        }
+    }
+}
+
+// 7. Owner Dashboard
+function renderOwnerDashboard() {
+    document.getElementById('owner-dash-welcome').textContent = `Welcome, ${appState.currentUser.name}!`;
+    const myFleet = appState.equipment.filter(e => e.owner.toLowerCase().includes(appState.currentUser.name.split(' ')[0].toLowerCase()) || e.ownerPhone === appState.currentUser.mobile);
+    document.getElementById('stat-o-fleet').textContent = myFleet.length;
+
+    // Requests
+    const reqList = document.getElementById('owner-requests-list');
+    reqList.innerHTML = '';
+    const pendingRequests = appState.bookings.filter(b => b.status === 'pending');
+    if (pendingRequests.length === 0) {
+        reqList.innerHTML = '<div class="col-12 text-muted small">No pending requests at this moment.</div>';
+    } else {
+        pendingRequests.forEach(r => {
+            reqList.innerHTML += `
+            <div class="col-md-6">
+                <div class="p-3 bg-light rounded-3 border">
+                    <div class="d-flex justify-content-between mb-1">
+                        <strong>${r.bno}</strong>
+                        <span class="badge bg-warning-subtle text-warning">Pending</span>
+                    </div>
+                    <h6 class="fw-bold text-dark mb-1">${r.eqName}</h6>
+                    <small class="text-muted d-block mb-2">Farmer: ${r.farmer} (+91 ${r.farmerPhone}) | Dates: ${r.sdate} to ${r.edate}</small>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-success rounded-pill px-3" onclick="approveRequest(${r.id})">Approve</button>
+                        <button class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="rejectRequest(${r.id})">Decline</button>
+                    </div>
+                </div>
+            </div>`;
+        });
+    }
+
+    // Fleet Table
+    const ftable = document.getElementById('owner-fleet-table');
+    ftable.innerHTML = '';
+    myFleet.forEach(eq => {
+        ftable.innerHTML += `
+        <tr>
+            <td class="ps-4">
+                <div class="d-flex align-items-center gap-2">
+                    <img src="${eq.img}" class="rounded" style="width: 40px; height: 40px; object-fit: cover;">
+                    <div><strong>${eq.name}</strong><small class="text-muted d-block">${eq.location}</small></div>
+                </div>
+            </td>
+            <td><span class="badge bg-light text-dark border">${eq.cat}</span></td>
+            <td><strong class="text-success">₹${eq.rate}</strong>/day</td>
+            <td><span class="badge bg-success-subtle text-success">${eq.status}</span></td>
+            <td><span class="badge bg-success">${eq.approval}</span></td>
+            <td class="text-end pe-4">
+                <button class="btn btn-sm btn-outline-danger rounded-pill" onclick="deleteEquipment(${eq.id})"><i class="fa-solid fa-trash"></i></button>
+            </td>
+        </tr>`;
+    });
+}
+
+function approveRequest(id) {
+    const bk = appState.bookings.find(b => b.id === id);
+    if (bk) {
+        bk.status = 'confirmed';
+        saveState();
+        showAlert(`Booking ${bk.bno} approved!`, 'success');
+        renderOwnerDashboard();
+    }
+}
+function rejectRequest(id) {
+    const bk = appState.bookings.find(b => b.id === id);
+    if (bk) {
+        bk.status = 'rejected';
+        saveState();
+        showAlert(`Booking ${bk.bno} declined.`, 'info');
+        renderOwnerDashboard();
+    }
+}
+function deleteEquipment(id) {
+    if (confirm('Delete this equipment listing?')) {
+        appState.equipment = appState.equipment.filter(e => e.id !== id);
+        saveState();
+        showAlert('Equipment removed.', 'info');
+        renderOwnerDashboard();
+    }
+}
+
+function handleSaveEquipment(e) {
+    e.preventDefault();
+    const newEq = {
+        id: Date.now(),
+        name: document.getElementById('add-eq-name').value,
+        cat: document.getElementById('add-eq-cat').value,
+        brand: document.getElementById('add-eq-brand').value,
+        model: document.getElementById('add-eq-model').value,
+        year: parseInt(document.getElementById('add-eq-year').value),
+        condition: 'Good',
+        location: document.getElementById('add-eq-loc').value,
+        rate: parseFloat(document.getElementById('add-eq-price').value),
+        deposit: parseFloat(document.getElementById('add-eq-deposit').value) || 2000,
+        owner: appState.currentUser.name,
+        ownerPhone: appState.currentUser.mobile,
+        status: 'available',
+        approval: 'approved',
+        rating: 5.0,
+        reviews: 1,
+        img: document.getElementById('add-eq-img').value || 'https://images.unsplash.com/photo-1592878904946-b3cd8ae243d0?auto=format&fit=crop&w=800&q=80',
+        desc: document.getElementById('add-eq-desc').value
+    };
+    appState.equipment.unshift(newEq);
+    saveState();
+    bootstrap.Modal.getInstance(document.getElementById('addEquipmentModal')).hide();
+    showAlert('New equipment registered and live!', 'success');
+    renderOwnerDashboard();
+}
+
+// 8. Admin Dashboard
+let chartRev = null;
+let chartCat = null;
+function renderAdminDashboard() {
+    const tbody = document.getElementById('admin-bookings-table');
+    tbody.innerHTML = '';
+    appState.bookings.forEach(b => {
+        tbody.innerHTML += `
+        <tr>
+            <td class="ps-4 fw-bold small">${b.bno}</td>
+            <td><strong>${b.eqName}</strong></td>
+            <td>${b.farmer}</td>
+            <td>${b.owner}</td>
+            <td class="small">${b.sdate} to ${b.edate}</td>
+            <td class="fw-bold text-success">₹${b.total.toLocaleString('en-IN')}</td>
+            <td><span class="badge bg-success-subtle text-success">${b.status}</span></td>
+            <td class="text-end pe-4">
+                <button class="btn btn-sm btn-light border rounded-pill" onclick="viewReceipt(${b.id})"><i class="fa-solid fa-file-invoice text-success"></i></button>
+            </td>
+        </tr>`;
+    });
+
+    // Chart.js
+    if (!chartRev) {
+        chartRev = new Chart(document.getElementById('adminRevChart'), {
+            type: 'bar',
+            data: {
+                labels: ['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'],
+                datasets: [{ label: 'Revenue (₹)', data: [18000, 24000, 36000, 42000, 54060, 22000], backgroundColor: '#2e7d32', borderRadius: 6 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        });
+    }
+    if (!chartCat) {
+        chartCat = new Chart(document.getElementById('adminCatChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Tractors', 'Harvesters', 'Rotavators', 'Seed Drills', 'Pumps', 'Others'],
+                datasets: [{ data: [4, 1, 1, 1, 1, 2], backgroundColor: ['#1b5e20','#2e7d32','#4caf50','#81c784','#f59e0b','#d97706'] }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    }
+}
+
+function exportDemoCsv() {
+    let csv = 'Booking Number,Equipment,Farmer,Owner,Start Date,End Date,Days,Total Amount,Status\n';
+    appState.bookings.forEach(b => {
+        csv += `"${b.bno}","${b.eqName}","${b.farmer}","${b.owner}","${b.sdate}","${b.edate}",${b.days},${b.total},"${b.status}"\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `agrirental_report_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+}
+
+// 9. Authentication flow
+let pendingLogin = { mobile: '', role: 'farmer', name: '' };
+
+function quickFill(phone, role) {
+    document.getElementById('input-mobile').value = phone;
+    let defaultName = 'Suresh Patel';
+    if (role === 'owner') {
+        document.getElementById('login_role_owner').checked = true;
+        defaultName = 'Murugan Palanisamy';
+    } else if (phone === '9876543210') {
+        defaultName = 'Ramesh Kumar (Admin)';
+        role = 'admin';
+    } else {
+        document.getElementById('login_role_farmer').checked = true;
+    }
+    const nameInput = document.getElementById('input-name');
+    if (nameInput) nameInput.value = defaultName;
+}
+
+function handleSendOtp(e) {
+    e.preventDefault();
+    const phone = document.getElementById('input-mobile').value.trim();
+    if (!/^[6-9]\d{9}$/.test(phone)) {
+        document.getElementById('login-error').textContent = 'Please enter a valid 10-digit Indian mobile number.';
+        document.getElementById('login-error').classList.remove('d-none');
+        return;
+    }
+    document.getElementById('login-error').classList.add('d-none');
+    const role = document.getElementById('login_role_owner').checked ? 'owner' : (phone === '9876543210' ? 'admin' : 'farmer');
+    const customName = (document.getElementById('input-name').value || '').trim();
+    pendingLogin = { mobile: phone, role: role, name: customName };
+
+    document.getElementById('otp-phone-display').innerHTML = `+91 ${phone} <a class="small text-success ms-2 cursor-pointer" onclick="switchView('view-login')"><i class="fa-solid fa-pen"></i> Edit</a>`;
+    switchView('view-otp');
+}
+
+function fillTestOtp() {
+    const boxes = document.querySelectorAll('.otp-box');
+    '123456'.split('').forEach((d, i) => { if (boxes[i]) boxes[i].value = d; });
+}
+
+function handleVerifyOtp(e) {
+    e.preventDefault();
+    const code = Array.from(document.querySelectorAll('.otp-box')).map(b => b.value).join('');
+    if (code.length !== 6) {
+        document.getElementById('otp-error').textContent = 'Please enter complete 6-digit OTP code.';
+        document.getElementById('otp-error').classList.remove('d-none');
+        return;
+    }
+
+    // Set User Name (Use custom name if typed, otherwise fall back to presets)
+    let name = pendingLogin.name;
+    if (!name) {
+        if (pendingLogin.role === 'owner') name = 'Murugan Palanisamy';
+        else if (pendingLogin.role === 'admin') name = 'Ramesh Kumar (Admin)';
+        else name = 'Suresh Patel';
+    }
+
+    appState.currentUser = { name: name, mobile: pendingLogin.mobile, role: pendingLogin.role };
+
+    // If logging in as an Equipment Owner with their custom name, link machinery fleet to their name & phone!
+    if (pendingLogin.role === 'owner') {
+        appState.equipment.forEach(eq => {
+            if (eq.owner === 'Murugan Palanisamy' || eq.ownerPhone === '9845612345') {
+                eq.owner = name;
+                eq.ownerPhone = pendingLogin.mobile;
+            }
+        });
+        saveState();
+    }
+
+    // Update UI auth states
+    document.getElementById('auth-logged-out').style.display = 'none';
+    const loggedInBox = document.getElementById('auth-logged-in');
+    loggedInBox.style.setProperty('display', 'flex', 'important');
+    document.getElementById('user-display-name').textContent = name;
+    document.getElementById('user-menu-name').textContent = name;
+    document.getElementById('user-menu-mobile').textContent = `+91 ${pendingLogin.mobile}`;
+    document.getElementById('user-role-badge').textContent = pendingLogin.role.toUpperCase();
+
+    // Show respective menu items
+    document.getElementById('nav-farmer-dash').style.display = (pendingLogin.role === 'farmer') ? 'block' : 'none';
+    document.getElementById('nav-farmer-bookings').style.display = (pendingLogin.role === 'farmer') ? 'block' : 'none';
+    document.getElementById('nav-owner-dash').style.display = (pendingLogin.role === 'owner') ? 'block' : 'none';
+    document.getElementById('nav-admin-dash').style.display = (pendingLogin.role === 'admin') ? 'block' : 'none';
+
+    showAlert(`Welcome, ${name}! Logged in as ${pendingLogin.role.toUpperCase()}.`, 'success');
+    switchRoleView();
+}
+
+function handleLogout() {
+    appState.currentUser = null;
+    document.getElementById('auth-logged-out').style.display = 'block';
+    document.getElementById('auth-logged-in').style.setProperty('display', 'none', 'important');
+    document.getElementById('nav-farmer-dash').style.display = 'none';
+    document.getElementById('nav-farmer-bookings').style.display = 'none';
+    document.getElementById('nav-owner-dash').style.display = 'none';
+    document.getElementById('nav-admin-dash').style.display = 'none';
+    showAlert('Logged out successfully.', 'info');
+    switchView('view-landing');
+}
+
+// Initial Run
+document.addEventListener('DOMContentLoaded', () => {
+    renderLanding();
+});
+</script>
+
+<script src="../api.js"></script>
+<script>
+// --- SPRING BOOT INTEGRATION OVERRIDES ---
+window.originalHandleVerifyOtp = handleVerifyOtp;
+handleVerifyOtp = async function(e) {
+    e.preventDefault();
+    const code = Array.from(document.querySelectorAll('.otp-box')).map(b => b.value).join('');
+    if (code.length !== 6) return;
+    try {
+        let res;
+        try {
+            res = await window.apiClient.auth.login(pendingLogin.mobile, "password");
+        } catch(err) {
+            res = await window.apiClient.auth.register({
+                name: pendingLogin.name || (pendingLogin.role === 'owner' ? 'Murugan Palanisamy' : 'Suresh Patel'),
+                mobile: pendingLogin.mobile,
+                password: "password",
+                role: pendingLogin.role.toUpperCase()
+            });
+        }
+        localStorage.setItem('jwt_token', res.token);
+        appState.currentUser = { name: res.user.name, mobile: res.user.mobile, role: res.user.role.toLowerCase() };
+        
+        document.getElementById('auth-logged-out').style.display = 'none';
+        document.getElementById('auth-logged-in').style.setProperty('display', 'flex', 'important');
+        document.getElementById('user-display-name').textContent = appState.currentUser.name;
+        document.getElementById('user-menu-name').textContent = appState.currentUser.name;
+        document.getElementById('user-role-badge').textContent = appState.currentUser.role.toUpperCase();
+        
+        document.getElementById('nav-farmer-dash').style.display = (pendingLogin.role === 'farmer') ? 'block' : 'none';
+        document.getElementById('nav-owner-dash').style.display = (pendingLogin.role === 'owner') ? 'block' : 'none';
+        document.getElementById('nav-admin-dash').style.display = (pendingLogin.role === 'admin') ? 'block' : 'none';
+        
+        showAlert(`Logged in securely via Spring Boot!`, 'success');
+        switchRoleView();
+    } catch (err) {
+        alert("API Error: " + err.message);
+    }
+}
+
+const origLogout = handleLogout;
+handleLogout = function() {
+    localStorage.removeItem('jwt_token');
+    origLogout();
+}
+
+// Force clear cache so new images show up
+localStorage.removeItem('agri_eq');
+appState.equipment = defaultEquipment;
+
+const origRenderAdmin = renderAdminDashboard;
+renderAdminDashboard = async function() {
+    try {
+        const stats = await window.apiClient.dashboard.getStats();
+        showAlert('Spring Boot Data Linked! Total Users in DB: ' + stats.totalUsers, 'success');
+    } catch(e) {
+        console.error("Dashboard error:", e);
+    }
+    origRenderAdmin();
+}
+</script>
+</body>
+</html>

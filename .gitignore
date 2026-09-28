@@ -1,0 +1,13 @@
+backend/target/
+*.class
+*.log
+.idea/
+.vscode/
+.env
+.env.*
+env
+env.example
+*.exe
+node_modules/
+.DS_Store
+Thumbs.db
